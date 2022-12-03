@@ -3,9 +3,8 @@ import { Injectable } from '@angular/core';
 import {
   BehaviorSubject,
   combineLatest,
+  distinctUntilChanged,
   map,
-  Observable,
-  Subject,
   switchMap,
   tap,
 } from 'rxjs';
@@ -17,21 +16,43 @@ import { APIResponse, Game } from '../models/game';
 })
 export class GameService {
   private games = new BehaviorSubject<Game[]>([]);
-  private filter = new BehaviorSubject<string>('');
+  private filters = new BehaviorSubject<Record<string, string>>({});
   private search = new BehaviorSubject<string>('');
+  private ordering = new BehaviorSubject<string>('');
+
+  private readonly ALLOWED_FILTERS = [
+    'name',
+    'released',
+    'added',
+    'created',
+    'updated',
+    'rating',
+    'metacritic',
+  ];
 
   games$ = this.games.asObservable();
-  filter$ = this.filter.asObservable();
-  search$ = this.search.asObservable();
+  filters$ = this.filters.asObservable();
+  search$ = this.search.asObservable().pipe(distinctUntilChanged());
+  ordering$ = this.ordering.asObservable().pipe(distinctUntilChanged());
 
   constructor(private http: HttpClient) {
-    combineLatest([this.filter$, this.search$])
+    combineLatest([this.filters$, this.search$, this.ordering$])
       .pipe(
-        switchMap(([filter, search]) => {
-          let params = new HttpParams().set('ordering', filter);
+        switchMap(([filters, search, ordering]) => {
+          let params = new HttpParams();
 
-          if (search.trim()) {
-            params.set('search', search);
+          if (Object.values(filters).length) {
+            Object.entries(filters).forEach(([filterName, filterValue]) => {
+              params = params.set(filterName, filterValue);
+            });
+          }
+
+          if (search) {
+            params = params.set('search', search);
+          }
+
+          if (ordering) {
+            params = params.set('ordering', ordering);
           }
 
           return this.http.get<APIResponse<Game>>(`${env.BASE_URL}/games`, {
@@ -50,7 +71,15 @@ export class GameService {
     this.search.next(search);
   }
 
-  updateFilters(filter: string) {
-    this.filter.next(filter);
+  updateFilters(filters: Record<string, string>) {
+    this.filters.next({ ...filters });
+  }
+
+  updateOrdering(ordering: string) {
+    this.ordering.next(ordering);
+  }
+
+  getAllowedFilters() {
+    return [...this.ALLOWED_FILTERS];
   }
 }

@@ -5,7 +5,7 @@ import { HomeComponent } from './components/home/home.component';
 const routes: Routes = [
   { path: '', component: HomeComponent },
   {
-    path: 'search/:game-search',
+    path: 'search/:gameName',
     component: HomeComponent,
   },
 ];

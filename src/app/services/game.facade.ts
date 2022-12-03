@@ -6,16 +6,24 @@ import { GameService } from './game.service';
 })
 export class GameFacade {
   games$ = this.gameService.games$;
-  filter$ = this.gameService.filter$;
+  filters$ = this.gameService.filters$;
   search$ = this.gameService.search$;
 
   constructor(private gameService: GameService) {}
 
-  updateFilters(filter: string) {
-    this.gameService.updateFilters(filter);
+  updateFilters(filters: Record<string, string>) {
+    this.gameService.updateFilters(filters);
   }
 
   updateSearch(search: string) {
     this.gameService.updateSearch(search);
+  }
+
+  updateOrdering(ordering: string) {
+    this.gameService.updateOrdering(ordering);
+  }
+
+  getAllowedFilters() {
+    return this.gameService.getAllowedFilters();
   }
 }
