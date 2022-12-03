@@ -35,4 +35,8 @@ export class GameFacade {
   findAllGames() {
     this.gameService.findAll().subscribe();
   }
+
+  clearGame() {
+    this.gameService.setState({ selectedGame: null });
+  }
 }

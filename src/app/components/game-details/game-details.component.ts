@@ -1,4 +1,9 @@
-import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  OnDestroy,
+  OnInit,
+} from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { GameFacade } from 'src/app/services/game.facade';
 
@@ -8,8 +13,8 @@ import { GameFacade } from 'src/app/services/game.facade';
   styleUrls: ['./game-details.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class GameDetailsComponent implements OnInit {
-  $selectedGame = this.gameFacade.selectedGame$;
+export class GameDetailsComponent implements OnInit, OnDestroy {
+  selectedGame$ = this.gameFacade.selectedGame$;
 
   constructor(
     private router: Router,
@@ -24,5 +29,9 @@ export class GameDetailsComponent implements OnInit {
 
       return this.gameFacade.findGame(params['id']);
     });
+  }
+
+  ngOnDestroy(): void {
+    this.gameFacade.clearGame();
   }
 }

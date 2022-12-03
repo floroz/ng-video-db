@@ -1,4 +1,4 @@
-<div class="game-tabs" *ngIf="$selectedGame | async as game">
+<div class="game-tabs" *ngIf="selectedGame$ | async as game">
   <mat-tab-group mat-align-tabs="start" backgroundColor="primary">
     <mat-tab label="About">
       <p *ngIf="game.parent_platforms?.length" class="game-tabs-par">

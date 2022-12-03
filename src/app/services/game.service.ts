@@ -2,13 +2,18 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import {
   BehaviorSubject,
-  combineLatest,
+  delay,
+  delayWhen,
   distinctUntilChanged,
+  forkJoin,
   map,
+  shareReplay,
   tap,
 } from 'rxjs';
 import { env } from 'src/environments/environment';
 import { APIResponse, Game, GameFilters } from '../models/game';
+
+import { produce } from 'immer';
 
 type GameState = {
   games: Game[];
@@ -42,9 +47,8 @@ const initialState: GameState = {
 export class GameService {
   constructor(private http: HttpClient) {}
 
-  private state = {
-    ...initialState,
-  };
+  private state = produce(initialState, (draft) => draft);
+
   private store = new BehaviorSubject<GameState>(this.state);
   private store$ = this.store.asObservable();
 
@@ -90,14 +94,19 @@ export class GameService {
       })
       .pipe(
         map(({ results: games }) => games),
-        tap(console.log),
-        tap((games) => this.store.next({ ...this.state, games: [...games] }))
+        tap((games) =>
+          this.store.next(
+            produce(this.state, (draft) => {
+              draft.games = produce(games, (draft) => draft);
+            })
+          )
+        )
       );
   }
 
   setState(state: Partial<GameState>) {
-    const newState = { ...this.state, ...state };
-    this.store.next(newState);
+    this.state = produce(this.state, (draft) => ({ ...draft, ...state }));
+    this.store.next(this.state);
   }
 
   getAllowedFilters() {
@@ -105,20 +114,23 @@ export class GameService {
   }
 
   findGame(id: string) {
-    const game$ = this.http.get<Game>(`${env.BASE_URL}/games/${id}`);
+    const gameDetails$ = this.http.get<Game>(`${env.BASE_URL}/games/${id}`);
+
     const screenshots$ = this.http
       .get<APIResponse<{ image: string }>>(
         `${env.BASE_URL}/games/${id}/screenshots`
       )
       .pipe(map(({ results: screenshots }) => screenshots));
 
-    const gameWithScreenshots$ = combineLatest([game$, screenshots$]).pipe(
-      map(([game, screenshots]) => ({ ...game, screenshots: screenshots })),
-      map((game) => (this.state = { ...this.state, selectedGame: game })),
-      tap((state) => this.store.next(state))
+    return forkJoin([gameDetails$, screenshots$]).pipe(
+      tap(([gameDetails, screenshots]) => {
+        this.state = produce(this.state, (draft) => {
+          gameDetails.screenshots = screenshots;
+          draft.selectedGame = gameDetails;
+        });
+        this.store.next(this.state);
+      })
     );
-
-    return gameWithScreenshots$;
   }
 }
 
