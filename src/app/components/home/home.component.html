@@ -8,7 +8,7 @@
     >
       <mat-option value=""></mat-option>
       <mat-option *ngFor="let filter of getFilters()" [value]="filter">{{
-        filter | uppercase
+        filter | capitalize
       }}</mat-option>
     </mat-select>
   </mat-form-field>
