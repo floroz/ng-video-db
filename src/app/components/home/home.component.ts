@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { ActivatedRoute, Params } from '@angular/router';
+import { ActivatedRoute, Params, Router } from '@angular/router';
 import { GameFacade } from 'src/app/services/game.facade';
 
 @Component({
@@ -13,16 +13,20 @@ export class HomeComponent {
 
   constructor(
     private activatedRoute: ActivatedRoute,
-    private gameFacade: GameFacade
+    private gameFacade: GameFacade,
+    private router: Router
   ) {}
 
   ngOnInit() {
     this.activatedRoute.params.subscribe((param) => {
+      this.gameFacade.findAllGames();
       this.gameFacade.updateSearch(param['gameName'] ?? '');
     });
   }
 
-  openGameDetails(id: number) {}
+  openGameDetails(id: number) {
+    this.router.navigate(['/games', id]);
+  }
 
   orderBy(ordering: string) {
     this.gameFacade.updateOrdering(ordering);

@@ -8,22 +8,31 @@ export class GameFacade {
   games$ = this.gameService.games$;
   filters$ = this.gameService.filters$;
   search$ = this.gameService.search$;
+  selectedGame$ = this.gameService.selectedGame$;
 
   constructor(private gameService: GameService) {}
 
   updateFilters(filters: Record<string, string>) {
-    this.gameService.updateFilters(filters);
+    this.gameService.setState({ filters });
   }
 
   updateSearch(search: string) {
-    this.gameService.updateSearch(search);
+    this.gameService.setState({ search });
   }
 
   updateOrdering(ordering: string) {
-    this.gameService.updateOrdering(ordering);
+    this.gameService.setState({ ordering });
   }
 
   getAllowedFilters() {
     return this.gameService.getAllowedFilters();
+  }
+
+  findGame(id: string) {
+    this.gameService.findGame(id).subscribe();
+  }
+
+  findAllGames() {
+    this.gameService.findAll().subscribe();
   }
 }

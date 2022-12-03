@@ -50,3 +50,20 @@ interface Trailer {
     max: string;
   };
 }
+
+export interface GameFilters {
+  name?: string;
+  released?: string;
+  added?: string;
+  created?: string;
+  updated?: string;
+  rating?: string;
+  metacritic?: string;
+  ['-name']?: string;
+  ['-released']?: string;
+  ['-added']?: string;
+  ['-created']?: string;
+  ['-updated']?: string;
+  ['-rating']?: string;
+  ['-metacritic']?: string;
+}

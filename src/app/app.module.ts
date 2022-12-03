@@ -15,6 +15,7 @@ import { HomeComponent } from './components/home/home.component';
 import { HttpErrorsInterceptor } from './interceptors/http-errors.interceptor';
 import { HttpHeadersInterceptor } from './interceptors/http-headers.interceptor';
 import { CapitalizePipe } from './pipes/capitalize.pipe';
+import { GameDetailsComponent } from './components/game-details/game-details.component';
 
 @NgModule({
   declarations: [
@@ -22,6 +23,7 @@ import { CapitalizePipe } from './pipes/capitalize.pipe';
     SearchBarComponent,
     HomeComponent,
     CapitalizePipe,
+    GameDetailsComponent,
   ],
   imports: [
     AppRoutingModule,

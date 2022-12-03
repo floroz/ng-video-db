@@ -1,5 +1,9 @@
 #  NgVideoGameDb (Push-based Architecture) 
 
+This project was inspired by [this app](https://github.com/bobangajicsm/ng-video-games-db).
+
+I have replicated the UI 1:1 but changed its architecture from a pull-based approach to a push-based approach.
+
 ![image](https://user-images.githubusercontent.com/45793869/205876101-0b70def2-86de-4130-848a-89c139b1c990.png)
 
 This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 15.0.2.
