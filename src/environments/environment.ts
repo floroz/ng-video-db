@@ -3,6 +3,6 @@
  * to load your secret keys
  */
 export const env = {
-  BASE_URL: '',
-  API_KEY: '',
+  BASE_URL: 'https://api.rawg.io/api',
+  API_KEY: 'add-your-key',
 };
