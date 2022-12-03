@@ -24,14 +24,18 @@ export class GameDetailsComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.route.params.subscribe((params) => {
       if (!params['id']) {
-        return this.router.navigate(['']);
+        this.router.navigate(['']);
+      } else {
+        this.gameFacade.findGame(params['id']);
       }
-
-      return this.gameFacade.findGame(params['id']);
     });
   }
 
   ngOnDestroy(): void {
+    /**
+     * Open question: can we avoid the consumer (GameDetailsComponent) having
+     * to worry about resetting the state?
+     */
     this.gameFacade.clearGame();
   }
 }
