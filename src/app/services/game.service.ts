@@ -7,7 +7,7 @@ import { APIResponse, Game } from '../models/game';
 @Injectable({
   providedIn: 'root',
 })
-export class HttpService {
+export class GameService {
   constructor(private http: HttpClient) {}
 
   getGameList(
@@ -23,5 +23,9 @@ export class HttpService {
     return this.http.get<APIResponse<Game>>(`${env.BASE_URL}/games`, {
       params,
     });
+  }
+
+  searchGames(filter: string, search?: string): Observable<APIResponse<Game>> {
+    return this.getGameList(filter, search);
   }
 }
