@@ -15,6 +15,7 @@ import { GameFacade } from 'src/app/services/game.facade';
 })
 export class GameDetailsComponent implements OnInit, OnDestroy {
   selectedGame$ = this.gameFacade.selectedGame$;
+  loadingGame$ = this.gameFacade.loadingGame$;
 
   constructor(
     private router: Router,

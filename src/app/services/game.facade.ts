@@ -9,6 +9,8 @@ export class GameFacade {
   filters$ = this.gameService.filters$;
   search$ = this.gameService.search$;
   selectedGame$ = this.gameService.selectedGame$;
+  loadingGame$ = this.gameService.loadingGame$;
+  loadingAllGames$ = this.gameService.loadingAllGames$;
 
   constructor(private gameService: GameService) {}
 

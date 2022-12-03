@@ -1,5 +1,11 @@
 .game {
 
+  &-loading {
+    width: 100%;
+    display: grid;
+    place-items: center;
+  }
+
   &-tabs {
     background: rgb(63 81 181 / 61%);
     color: #fff;

@@ -13,7 +13,9 @@
     </mat-select>
   </mat-form-field>
 </div>
-
+<div class="game-loading" *ngIf="loadingAllGames$ | async">
+  <mat-spinner color="primary"></mat-spinner>
+</div>
 <ng-container *ngIf="games$ | async as games">
   <div class="games" *ngIf="games.length">
     <div

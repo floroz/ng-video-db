@@ -30,6 +30,12 @@
     transform: translateY(-3px);
   }
 
+  &-loading {
+    width: 100%;
+    display: grid;
+    place-items: center;
+  }
+
   &-thumb-container {
     background-color: #000;
     position: relative;

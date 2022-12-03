@@ -2,6 +2,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import {
   BehaviorSubject,
+  catchError,
   delay,
   delayWhen,
   distinctUntilChanged,
@@ -9,6 +10,7 @@ import {
   map,
   shareReplay,
   tap,
+  throwError,
 } from 'rxjs';
 import { env } from 'src/environments/environment';
 import { APIResponse, Game, GameFilters } from '../models/game';
@@ -73,27 +75,30 @@ export class GameService {
     distinctUntilChanged()
   );
 
+  loadingGame = new BehaviorSubject(false);
+  loadingAllGames = new BehaviorSubject(false);
+
+  loadingGame$ = this.loadingGame.asObservable();
+  loadingAllGames$ = this.loadingAllGames.asObservable();
+
   findAll() {
-    const { filters, search, ordering } = this.state;
+    this.loadingAllGames.next(true);
 
-    let params = new HttpParams();
-
-    params = addFiltersToParams(filters, params);
-
-    if (search) {
-      params = params.set('search', search);
-    }
-
-    if (ordering) {
-      params = params.set('ordering', ordering);
-    }
+    const params = generateAllGamesParams(this.state);
 
     return this.http
       .get<APIResponse<Game>>(`${env.BASE_URL}/games`, {
         params,
       })
       .pipe(
-        map(({ results: games }) => games),
+        map(({ results: games }) => {
+          this.loadingAllGames.next(false);
+          return games;
+        }),
+        catchError((err) => {
+          this.loadingAllGames.next(false);
+          return throwError(() => err);
+        }),
         tap((games) =>
           this.store.next(
             produce(this.state, (draft) => {
@@ -114,6 +119,9 @@ export class GameService {
   }
 
   findGame(id: string) {
+    // start loading
+    this.loadingGame.next(true);
+
     const gameDetails$ = this.http.get<Game>(`${env.BASE_URL}/games/${id}`);
 
     const screenshots$ = this.http
@@ -123,15 +131,44 @@ export class GameService {
       .pipe(map(({ results: screenshots }) => screenshots));
 
     return forkJoin([gameDetails$, screenshots$]).pipe(
+      catchError((err) => {
+        // stop loading when error occurs
+        this.loadingGame.next(false);
+        return throwError(() => err);
+      }),
       tap(([gameDetails, screenshots]) => {
+        // stop loading
+        this.loadingGame.next(false);
+        // update state
         this.state = produce(this.state, (draft) => {
           gameDetails.screenshots = screenshots;
           draft.selectedGame = gameDetails;
         });
+        // notify subscribers
         this.store.next(this.state);
       })
     );
   }
+}
+
+function generateAllGamesParams({
+  filters,
+  search,
+  ordering,
+}: Pick<GameState, 'filters' | 'search' | 'ordering'>) {
+  let params = new HttpParams();
+
+  params = addFiltersToParams(filters, params);
+
+  if (search) {
+    params = params.set('search', search);
+  }
+
+  if (ordering) {
+    params = params.set('ordering', ordering);
+  }
+
+  return params;
 }
 
 function addFiltersToParams(

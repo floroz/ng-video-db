@@ -10,6 +10,7 @@ import { GameFacade } from 'src/app/services/game.facade';
 })
 export class HomeComponent {
   games$ = this.gameFacade.games$;
+  loadingAllGames$ = this.gameFacade.loadingAllGames$;
 
   constructor(
     private activatedRoute: ActivatedRoute,
