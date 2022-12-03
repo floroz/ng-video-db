@@ -1,22 +1,31 @@
-import { Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ActivatedRoute, Params } from '@angular/router';
+import { Game } from 'src/app/models/game';
+import { GameFacade } from 'src/app/services/game.facade';
+import { GameService } from 'src/app/services/game.service';
 
 @Component({
   selector: 'app-home',
   templateUrl: './home.component.html',
   styleUrls: ['./home.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class HomeComponent {
-  public sort!: string;
-  public games = [
-    {
-      id: '',
-      background_image: '',
-      name: '',
-      parent_platforms: [{ platform: { slug: '' } }],
-    },
-  ];
+  sort!: string;
+  games$ = this.gameFacade.games$;
 
-  openGameDetails(id: string) {}
+  constructor(
+    private activatedRoute: ActivatedRoute,
+    private gameFacade: GameFacade
+  ) {}
 
-  searchGames(filter: string) {}
+  ngOnInit() {
+    this.activatedRoute.params.subscribe(console.log);
+  }
+
+  openGameDetails(id: number) {}
+
+  sortBy(sort: string) {
+    // this.gameFacade.updateFilters()
+  }
 }

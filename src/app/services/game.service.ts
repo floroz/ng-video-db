@@ -1,6 +1,14 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import {
+  BehaviorSubject,
+  combineLatest,
+  map,
+  Observable,
+  Subject,
+  switchMap,
+  tap,
+} from 'rxjs';
 import { env } from 'src/environments/environment';
 import { APIResponse, Game } from '../models/game';
 
@@ -8,24 +16,41 @@ import { APIResponse, Game } from '../models/game';
   providedIn: 'root',
 })
 export class GameService {
-  constructor(private http: HttpClient) {}
+  private games = new BehaviorSubject<Game[]>([]);
+  private filter = new BehaviorSubject<string>('');
+  private search = new BehaviorSubject<string>('');
 
-  getGameList(
-    ordering: string,
-    search?: string
-  ): Observable<APIResponse<Game>> {
-    let params = new HttpParams().set('ordering', ordering);
+  games$ = this.games.asObservable();
+  filter$ = this.filter.asObservable();
+  search$ = this.search.asObservable();
 
-    if (search) {
-      params.set('search', search);
-    }
+  constructor(private http: HttpClient) {
+    combineLatest([this.filter$, this.search$])
+      .pipe(
+        switchMap(([filter, search]) => {
+          let params = new HttpParams().set('ordering', filter);
 
-    return this.http.get<APIResponse<Game>>(`${env.BASE_URL}/games`, {
-      params,
-    });
+          if (search.trim()) {
+            params.set('search', search);
+          }
+
+          return this.http.get<APIResponse<Game>>(`${env.BASE_URL}/games`, {
+            params,
+          });
+        }),
+        tap(console.log),
+        map(({ results }) => results),
+        // notify subscribers
+        tap((results) => this.games.next([...results]))
+      )
+      .subscribe();
   }
 
-  searchGames(filter: string, search?: string): Observable<APIResponse<Game>> {
-    return this.getGameList(filter, search);
+  updateSearch(search: string) {
+    this.search.next(search);
+  }
+
+  updateFilters(filter: string) {
+    this.filter.next(filter);
   }
 }

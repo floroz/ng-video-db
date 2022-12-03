@@ -4,8 +4,9 @@
     <mat-select
       panelClass="sort-select"
       [(ngModel)]="sort"
-      (selectionChange)="searchGames(sort)"
+      (selectionChange)="sortBy(sort)"
     >
+      <mat-option value=""></mat-option>
       <mat-option value="name">Name</mat-option>
       <mat-option value="-released">Released</mat-option>
       <mat-option value="-added">Added</mat-option>
@@ -17,9 +18,13 @@
   </mat-form-field>
 </div>
 
-<div class="games">
-  <ng-container *ngFor="let game of games">
-    <div class="game" (click)="openGameDetails(game.id)">
+<ng-container *ngIf="games$ | async as games">
+  <div class="games" *ngIf="games.length">
+    <div
+      *ngFor="let game of games"
+      class="game"
+      (click)="openGameDetails(game.id)"
+    >
       <div class="game-thumb-container">
         <img
           *ngIf="game.background_image"
@@ -41,5 +46,5 @@
         </div>
       </div>
     </div>
-  </ng-container>
-</div>
+  </div>
+</ng-container>
