@@ -4,11 +4,9 @@ import {
   BehaviorSubject,
   catchError,
   delay,
-  delayWhen,
   distinctUntilChanged,
   forkJoin,
   map,
-  shareReplay,
   tap,
   throwError,
 } from 'rxjs';
@@ -82,7 +80,7 @@ export class GameService {
   loadingAllGames$ = this.loadingAllGames.asObservable();
 
   findAll() {
-    this.loadingAllGames.next(true);
+    this.startLoadingAllGames();
 
     const params = generateAllGamesParams(this.state);
 
@@ -91,21 +89,18 @@ export class GameService {
         params,
       })
       .pipe(
-        map(({ results: games }) => {
-          this.loadingAllGames.next(false);
-          return games;
-        }),
+        map(({ results: games }) => games),
         catchError((err) => {
-          this.loadingAllGames.next(false);
+          this.stopLoadingAllGames();
           return throwError(() => err);
         }),
-        tap((games) =>
-          this.store.next(
-            produce(this.state, (draft) => {
-              draft.games = produce(games, (draft) => draft);
-            })
-          )
-        )
+        tap((games) => {
+          const newState = produce(this.state, (draft) => {
+            draft.games = produce(games, (draft) => draft);
+          });
+          this.stopLoadingAllGames();
+          this.setState(newState);
+        })
       );
   }
 
@@ -114,13 +109,12 @@ export class GameService {
     this.store.next(this.state);
   }
 
-  getAllowedFilters() {
+  get ALLOWED_FILTERS() {
     return [...ALLOWED_FILTERS];
   }
 
-  findGame(id: string) {
-    // start loading
-    this.loadingGame.next(true);
+  findOne(id: string) {
+    this.startLoadingGame();
 
     const gameDetails$ = this.http.get<Game>(`${env.BASE_URL}/games/${id}`);
 
@@ -132,22 +126,32 @@ export class GameService {
 
     return forkJoin([gameDetails$, screenshots$]).pipe(
       catchError((err) => {
-        // stop loading when error occurs
-        this.loadingGame.next(false);
+        this.stopLoadingGame();
         return throwError(() => err);
       }),
       tap(([gameDetails, screenshots]) => {
-        // stop loading
-        this.loadingGame.next(false);
-        // update state
-        this.state = produce(this.state, (draft) => {
+        const newState = produce(this.state, (draft) => {
           gameDetails.screenshots = screenshots;
           draft.selectedGame = gameDetails;
         });
-        // notify subscribers
-        this.store.next(this.state);
+
+        this.stopLoadingGame();
+        this.setState(newState);
       })
     );
+  }
+
+  private startLoadingGame() {
+    this.loadingGame.next(true);
+  }
+  private stopLoadingGame() {
+    this.loadingGame.next(false);
+  }
+  private startLoadingAllGames() {
+    this.loadingAllGames.next(true);
+  }
+  private stopLoadingAllGames() {
+    this.loadingAllGames.next(false);
   }
 }
 

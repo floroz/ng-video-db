@@ -11,6 +11,7 @@ import { GameFacade } from 'src/app/services/game.facade';
 export class HomeComponent {
   games$ = this.gameFacade.games$;
   loadingAllGames$ = this.gameFacade.loadingAllGames$;
+  allowedFilters = this.gameFacade.ALLOWED_FILTERS;
 
   constructor(
     private activatedRoute: ActivatedRoute,
@@ -31,9 +32,5 @@ export class HomeComponent {
 
   orderBy(ordering: string) {
     this.gameFacade.updateOrdering(ordering);
-  }
-
-  getFilters() {
-    return this.gameFacade.getAllowedFilters();
   }
 }

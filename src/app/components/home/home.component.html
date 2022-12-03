@@ -7,7 +7,7 @@
       (selectionChange)="orderBy(orderSelect.value)"
     >
       <mat-option value=""></mat-option>
-      <mat-option *ngFor="let filter of getFilters()" [value]="filter">{{
+      <mat-option *ngFor="let filter of allowedFilters" [value]="filter">{{
         filter | capitalize
       }}</mat-option>
     </mat-select>

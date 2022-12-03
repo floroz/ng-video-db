@@ -11,6 +11,7 @@ export class GameFacade {
   selectedGame$ = this.gameService.selectedGame$;
   loadingGame$ = this.gameService.loadingGame$;
   loadingAllGames$ = this.gameService.loadingAllGames$;
+  ALLOWED_FILTERS = this.gameService.ALLOWED_FILTERS;
 
   constructor(private gameService: GameService) {}
 
@@ -26,12 +27,8 @@ export class GameFacade {
     this.gameService.setState({ ordering });
   }
 
-  getAllowedFilters() {
-    return this.gameService.getAllowedFilters();
-  }
-
   findGame(id: string) {
-    this.gameService.findGame(id).subscribe();
+    this.gameService.findOne(id).subscribe();
   }
 
   findAllGames() {
