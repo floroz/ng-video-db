@@ -1,4 +1,6 @@
-# NgVideoGameDb
+#  NgVideoGameDb (Push-based Architecture) 
+
+![image](https://user-images.githubusercontent.com/45793869/205876101-0b70def2-86de-4130-848a-89c139b1c990.png)
 
 This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 15.0.2.
 
