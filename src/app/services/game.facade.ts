@@ -21,10 +21,6 @@ export class GameFacade {
     private selectedGameService: GameDetailsService
   ) {}
 
-  initGames(): Subscription {
-    return this.gameService.init();
-  }
-
   updateFilters(filters: GameFilters): void {
     this.gameService.updateFilters(filters);
   }

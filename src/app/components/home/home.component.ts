@@ -14,12 +14,10 @@ import { GameFacade } from 'src/app/services/game.facade';
   styleUrls: ['./home.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class HomeComponent implements OnInit, OnDestroy {
+export class HomeComponent implements OnInit {
   games$ = this.gameFacade.games$;
   loadingAllGames$ = this.gameFacade.loadingAllGames$;
   allowedFilters = this.gameFacade.ALLOWED_FILTERS;
-
-  sub!: Subscription;
 
   constructor(
     private activatedRoute: ActivatedRoute,
@@ -28,14 +26,9 @@ export class HomeComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit() {
-    this.sub = this.gameFacade.initGames();
     this.activatedRoute.params.subscribe((param) => {
       this.gameFacade.updateSearch(param['gameName'] ?? '');
     });
-  }
-
-  ngOnDestroy(): void {
-    this.sub.unsubscribe();
   }
 
   openGameDetails(id: number) {

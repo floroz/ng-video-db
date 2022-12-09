@@ -60,10 +60,6 @@ export class GameService {
     .asObservable()
     .pipe(tap((state) => console.log('State Updated: ', state)));
 
-  games$ = this.store$.pipe(
-    map((state) => state.games),
-    distinctUntilChanged()
-  );
   filters$ = this.store$.pipe(
     map((state) => state.filters),
     distinctUntilChanged()
@@ -77,22 +73,30 @@ export class GameService {
     distinctUntilChanged()
   );
 
+  games$: Observable<Game[]> = combineLatest([
+    this.search$,
+    this.filters$,
+    this.ordering$,
+  ]).pipe(
+    switchMap(([search, filter, ordering]) => {
+      return this.findMany(search, filter, ordering);
+    })
+  );
+
   loadingAllGames = new BehaviorSubject(false);
 
   loadingAllGames$ = this.loadingAllGames.asObservable();
 
   constructor(private http: HttpClient) {}
 
-  init(): Subscription {
-    return combineLatest([this.filters$, this.search$, this.ordering$])
-      .pipe(switchMap(() => this.findMany()))
-      .subscribe();
-  }
-
-  findMany() {
+  findMany(
+    search: string,
+    filters: GameFilters | undefined,
+    ordering: string | undefined
+  ) {
     this.startLoadingAllGames();
 
-    const params = generateAllGamesParams(this.state);
+    const params = generateAllGamesParams({ filters, ordering, search });
 
     return this.http
       .get<APIResponse<Game>>(`${env.BASE_URL}/games`, {
