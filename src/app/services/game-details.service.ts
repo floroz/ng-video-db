@@ -42,6 +42,8 @@ const initialState: GameDetailsState = {
   providedIn: 'root',
 })
 export class GameDetailsService {
+  constructor(private http: HttpClient) {}
+
   private state = initialState;
 
   private store = new BehaviorSubject<GameDetailsState>(this.state);
@@ -63,8 +65,6 @@ export class GameDetailsService {
     map((state) => state.loading),
     distinctUntilChanged()
   );
-
-  constructor(private http: HttpClient) {}
 
   findOne(id: string) {
     this.setState({ selectedGameId: id });
