@@ -3,12 +3,22 @@ import { Injectable } from '@angular/core';
 import {
   BehaviorSubject,
   catchError,
+  combineLatest,
   delay,
   distinctUntilChanged,
+  exhaustMap,
+  filter,
   forkJoin,
   map,
+  mergeMap,
+  Observable,
+  of,
+  race,
+  retry,
+  shareReplay,
+  Subscription,
+  switchMap,
   tap,
-  throwError,
 } from 'rxjs';
 import { env } from 'src/environments/environment';
 import { APIResponse, Game, GameFilters } from '../models/game';
@@ -20,7 +30,6 @@ type GameState = {
   filters: GameFilters | undefined;
   ordering: string | undefined;
   search: string;
-  selectedGame: null | Game;
 };
 
 const ALLOWED_FILTERS = [
@@ -38,19 +47,18 @@ const initialState: GameState = {
   filters: {},
   ordering: undefined,
   search: '',
-  selectedGame: null,
 };
 
 @Injectable({
   providedIn: 'root',
 })
 export class GameService {
-  constructor(private http: HttpClient) {}
-
   private state = produce(initialState, (draft) => draft);
 
   private store = new BehaviorSubject<GameState>(this.state);
-  private store$ = this.store.asObservable();
+  private store$ = this.store
+    .asObservable()
+    .pipe(tap((state) => console.log('State Updated: ', state)));
 
   games$ = this.store$.pipe(
     map((state) => state.games),
@@ -68,18 +76,20 @@ export class GameService {
     map((state) => state.ordering),
     distinctUntilChanged()
   );
-  selectedGame$ = this.store$.pipe(
-    map((state) => state.selectedGame),
-    distinctUntilChanged()
-  );
 
-  loadingGame = new BehaviorSubject(false);
   loadingAllGames = new BehaviorSubject(false);
 
-  loadingGame$ = this.loadingGame.asObservable();
   loadingAllGames$ = this.loadingAllGames.asObservable();
 
-  findAll() {
+  constructor(private http: HttpClient) {}
+
+  init(): Subscription {
+    return combineLatest([this.filters$, this.search$, this.ordering$])
+      .pipe(switchMap(() => this.findMany()))
+      .subscribe();
+  }
+
+  findMany() {
     this.startLoadingAllGames();
 
     const params = generateAllGamesParams(this.state);
@@ -90,10 +100,13 @@ export class GameService {
       })
       .pipe(
         map(({ results: games }) => games),
+        retry(2),
         catchError((err) => {
+          console.error(err);
           this.stopLoadingAllGames();
-          return throwError(() => err);
+          return of(null);
         }),
+        filter(Boolean),
         tap((games) => {
           const newState = produce(this.state, (draft) => {
             draft.games = produce(games, (draft) => draft);
@@ -104,7 +117,19 @@ export class GameService {
       );
   }
 
-  setState(state: Partial<GameState>) {
+  updateFilters(filters: GameFilters) {
+    this.setState({ filters });
+  }
+
+  updateSearch(search: string) {
+    this.setState({ search });
+  }
+
+  updateOrdering(ordering: string) {
+    this.setState({ ordering });
+  }
+
+  private setState(state: Partial<GameState>) {
     this.state = produce(this.state, (draft) => ({ ...draft, ...state }));
     this.store.next(this.state);
   }
@@ -113,40 +138,6 @@ export class GameService {
     return [...ALLOWED_FILTERS];
   }
 
-  findOne(id: string) {
-    this.startLoadingGame();
-
-    const gameDetails$ = this.http.get<Game>(`${env.BASE_URL}/games/${id}`);
-
-    const screenshots$ = this.http
-      .get<APIResponse<{ image: string }>>(
-        `${env.BASE_URL}/games/${id}/screenshots`
-      )
-      .pipe(map(({ results: screenshots }) => screenshots));
-
-    return forkJoin([gameDetails$, screenshots$]).pipe(
-      catchError((err) => {
-        this.stopLoadingGame();
-        return throwError(() => err);
-      }),
-      tap(([gameDetails, screenshots]) => {
-        const newState = produce(this.state, (draft) => {
-          gameDetails.screenshots = screenshots;
-          draft.selectedGame = gameDetails;
-        });
-
-        this.stopLoadingGame();
-        this.setState(newState);
-      })
-    );
-  }
-
-  private startLoadingGame() {
-    this.loadingGame.next(true);
-  }
-  private stopLoadingGame() {
-    this.loadingGame.next(false);
-  }
   private startLoadingAllGames() {
     this.loadingAllGames.next(true);
   }

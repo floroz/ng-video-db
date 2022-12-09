@@ -22,6 +22,7 @@ export class GameDetailsComponent implements OnInit, OnDestroy {
     private route: ActivatedRoute,
     private gameFacade: GameFacade
   ) {}
+
   ngOnInit(): void {
     this.route.params.subscribe((params) => {
       if (!params['id']) {
@@ -37,6 +38,6 @@ export class GameDetailsComponent implements OnInit, OnDestroy {
      * Open question: can we avoid the consumer (GameDetailsComponent) having
      * to worry about resetting the state?
      */
-    this.gameFacade.clearGame();
+    // this.gameFacade.clearGame();
   }
 }

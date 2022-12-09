@@ -1,5 +1,8 @@
 import { Injectable } from '@angular/core';
+import { Subscription } from 'rxjs';
+import { GameFilters } from '../models/game';
 import { GameService } from './game.service';
+import { GameDetailsService } from './game-details.service';
 
 @Injectable({
   providedIn: 'root',
@@ -8,34 +11,33 @@ export class GameFacade {
   games$ = this.gameService.games$;
   filters$ = this.gameService.filters$;
   search$ = this.gameService.search$;
-  selectedGame$ = this.gameService.selectedGame$;
-  loadingGame$ = this.gameService.loadingGame$;
+  selectedGame$ = this.selectedGameService.selectedGame$;
+  loadingGame$ = this.selectedGameService.loading$;
   loadingAllGames$ = this.gameService.loadingAllGames$;
   ALLOWED_FILTERS = this.gameService.ALLOWED_FILTERS;
 
-  constructor(private gameService: GameService) {}
+  constructor(
+    private gameService: GameService,
+    private selectedGameService: GameDetailsService
+  ) {}
 
-  updateFilters(filters: Record<string, string>) {
-    this.gameService.setState({ filters });
+  initGames(): Subscription {
+    return this.gameService.init();
   }
 
-  updateSearch(search: string) {
-    this.gameService.setState({ search });
+  updateFilters(filters: GameFilters): void {
+    this.gameService.updateFilters(filters);
   }
 
-  updateOrdering(ordering: string) {
-    this.gameService.setState({ ordering });
+  updateSearch(search: string): void {
+    this.gameService.updateSearch(search);
   }
 
-  findGame(id: string) {
-    this.gameService.findOne(id).subscribe();
+  updateOrdering(ordering: string): void {
+    this.gameService.updateOrdering(ordering);
   }
 
-  findAllGames() {
-    this.gameService.findAll().subscribe();
-  }
-
-  clearGame() {
-    this.gameService.setState({ selectedGame: null });
+  findGame(id: string): void {
+    this.selectedGameService.findOne(id);
   }
 }
