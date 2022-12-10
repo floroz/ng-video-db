@@ -4,9 +4,8 @@ import {
   OnDestroy,
   OnInit,
 } from '@angular/core';
-import { ActivatedRoute, Params, Router } from '@angular/router';
-import { Subscription } from 'rxjs';
-import { GameFacade } from 'src/app/services/game.facade';
+import { ActivatedRoute, Router } from '@angular/router';
+import { GameSearchFacade } from 'src/app/services/game-search.facade';
 
 @Component({
   selector: 'app-home',
@@ -15,19 +14,19 @@ import { GameFacade } from 'src/app/services/game.facade';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class HomeComponent implements OnInit {
-  games$ = this.gameFacade.games$;
-  loadingAllGames$ = this.gameFacade.loadingAllGames$;
-  allowedFilters = this.gameFacade.ALLOWED_FILTERS;
+  games$ = this.facade.games$;
+  loading$ = this.facade.loading$;
+  allowedFilters = this.facade.ALLOWED_FILTERS;
 
   constructor(
     private activatedRoute: ActivatedRoute,
-    private gameFacade: GameFacade,
+    private facade: GameSearchFacade,
     private router: Router
   ) {}
 
   ngOnInit() {
     this.activatedRoute.params.subscribe((param) => {
-      this.gameFacade.updateSearch(param['gameName'] ?? '');
+      this.facade.setSearch(param['gameName'] ?? '');
     });
   }
 
@@ -36,6 +35,6 @@ export class HomeComponent implements OnInit {
   }
 
   orderBy(ordering: string) {
-    this.gameFacade.updateOrdering(ordering);
+    this.facade.setOrdering(ordering);
   }
 }

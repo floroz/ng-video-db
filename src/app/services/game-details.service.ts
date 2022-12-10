@@ -1,8 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import produce from 'immer';
 import {
-  BehaviorSubject,
   catchError,
   concat,
   delay,
@@ -22,6 +20,7 @@ import {
 } from 'rxjs';
 import { env } from 'src/environments/environment';
 import { APIResponse, Game } from '../models/game';
+import { StateService } from './state.service';
 
 const INITIAL_WAITING_TIME = 150;
 const MINIMUM_TIME_TO_DISPLAY_LOADER = 250;
@@ -41,12 +40,11 @@ const initialState: GameDetailsState = {
 @Injectable({
   providedIn: 'root',
 })
-export class GameDetailsService {
-  constructor(private http: HttpClient) {}
+export class GameDetailsService extends StateService<GameDetailsState> {
+  constructor(private http: HttpClient) {
+    super(initialState);
+  }
 
-  private state = initialState;
-
-  private store = new BehaviorSubject<GameDetailsState>(this.state);
   private store$ = this.store.asObservable();
 
   selectedGame$ = this.store$.pipe(
@@ -157,16 +155,5 @@ export class GameDetailsService {
         `${env.BASE_URL}/games/${id}/screenshots`
       )
       .pipe(map(({ results: screenshots }) => screenshots));
-  }
-
-  private setState<T extends Partial<GameDetailsState>>(partial: T) {
-    const newState = produce(this.state, (draft) => {
-      for (let key in partial) {
-        // @ts-expect-error Immer.js not playing nicely with the typings here
-        draft[key] = partial[key];
-      }
-    });
-    this.state = newState;
-    this.store.next(newState);
   }
 }

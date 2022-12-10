@@ -1,7 +1,7 @@
-<div class="game-loading" *ngIf="loadingGame$ | async">
+<div class="game-loading" *ngIf="loading$ | async">
   <mat-spinner color="primary"></mat-spinner>
 </div>
-<div class="game-tabs" *ngIf="selectedGame$ | async as game">
+<div class="game-tabs" *ngIf="game$ | async as game">
   <mat-tab-group mat-align-tabs="start" backgroundColor="primary">
     <mat-tab label="About">
       <p *ngIf="game.parent_platforms?.length" class="game-tabs-par">

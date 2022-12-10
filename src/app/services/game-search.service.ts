@@ -1,35 +1,28 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import {
-  BehaviorSubject,
   catchError,
   combineLatest,
-  delay,
   distinctUntilChanged,
-  exhaustMap,
   filter,
-  forkJoin,
   map,
-  mergeMap,
   Observable,
   of,
-  race,
   retry,
-  shareReplay,
-  Subscription,
   switchMap,
   tap,
 } from 'rxjs';
 import { env } from 'src/environments/environment';
 import { APIResponse, Game, GameFilters } from '../models/game';
 
-import { produce } from 'immer';
+import { StateService } from './state.service';
 
-type GameState = {
+type GameSearchState = {
   games: Game[];
   filters: GameFilters | undefined;
   ordering: string | undefined;
   search: string;
+  loading: boolean;
 };
 
 const ALLOWED_FILTERS = [
@@ -42,23 +35,19 @@ const ALLOWED_FILTERS = [
   'metacritic',
 ] as const;
 
-const initialState: GameState = {
+const initialState: GameSearchState = {
   games: [],
   filters: {},
   ordering: undefined,
   search: '',
+  loading: false,
 };
 
 @Injectable({
   providedIn: 'root',
 })
-export class GameService {
-  private state = produce(initialState, (draft) => draft);
-
-  private store = new BehaviorSubject<GameState>(this.state);
-  private store$ = this.store
-    .asObservable()
-    .pipe(tap((state) => console.log('State Updated: ', state)));
+export class GameSearchService extends StateService<GameSearchState> {
+  private store$ = this.store.asObservable();
 
   filters$ = this.store$.pipe(
     map((state) => state.filters),
@@ -78,23 +67,42 @@ export class GameService {
     this.filters$,
     this.ordering$,
   ]).pipe(
-    switchMap(([search, filter, ordering]) => {
-      return this.findMany(search, filter, ordering);
+    switchMap(([search, filters, ordering]) => {
+      return this.search({ search, filters, ordering });
     })
   );
 
-  loadingAllGames = new BehaviorSubject(false);
+  loading$ = this.store$.pipe().pipe(
+    map((state) => state.loading),
+    distinctUntilChanged()
+  );
 
-  loadingAllGames$ = this.loadingAllGames.asObservable();
+  constructor(private http: HttpClient) {
+    super(initialState);
+  }
 
-  constructor(private http: HttpClient) {}
+  setFilters(filters: GameFilters) {
+    this.setState({ filters });
+  }
 
-  findMany(
-    search: string,
-    filters: GameFilters | undefined,
-    ordering: string | undefined
-  ) {
-    this.startLoadingAllGames();
+  setSearch(search: string) {
+    this.setState({ search });
+  }
+
+  setOrdering(ordering: string) {
+    this.setState({ ordering });
+  }
+
+  get ALLOWED_FILTERS() {
+    return [...ALLOWED_FILTERS];
+  }
+
+  private search({
+    filters,
+    search,
+    ordering,
+  }: Pick<GameSearchState, 'filters' | 'ordering' | 'search'>) {
+    this.setState({ loading: true });
 
     const params = generateAllGamesParams({ filters, ordering, search });
 
@@ -107,46 +115,14 @@ export class GameService {
         retry(2),
         catchError((err) => {
           console.error(err);
-          this.stopLoadingAllGames();
+          this.setState({ loading: false });
           return of(null);
         }),
         filter(Boolean),
         tap((games) => {
-          const newState = produce(this.state, (draft) => {
-            draft.games = produce(games, (draft) => draft);
-          });
-          this.stopLoadingAllGames();
-          this.setState(newState);
+          this.setState({ loading: false, games });
         })
       );
-  }
-
-  updateFilters(filters: GameFilters) {
-    this.setState({ filters });
-  }
-
-  updateSearch(search: string) {
-    this.setState({ search });
-  }
-
-  updateOrdering(ordering: string) {
-    this.setState({ ordering });
-  }
-
-  private setState(state: Partial<GameState>) {
-    this.state = produce(this.state, (draft) => ({ ...draft, ...state }));
-    this.store.next(this.state);
-  }
-
-  get ALLOWED_FILTERS() {
-    return [...ALLOWED_FILTERS];
-  }
-
-  private startLoadingAllGames() {
-    this.loadingAllGames.next(true);
-  }
-  private stopLoadingAllGames() {
-    this.loadingAllGames.next(false);
   }
 }
 
@@ -154,7 +130,7 @@ function generateAllGamesParams({
   filters,
   search,
   ordering,
-}: Pick<GameState, 'filters' | 'search' | 'ordering'>) {
+}: Pick<GameSearchState, 'filters' | 'search' | 'ordering'>) {
   let params = new HttpParams();
 
   params = addFiltersToParams(filters, params);

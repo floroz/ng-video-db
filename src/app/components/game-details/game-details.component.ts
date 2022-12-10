@@ -5,7 +5,7 @@ import {
   OnInit,
 } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { GameFacade } from 'src/app/services/game.facade';
+import { GameDetailsFacade } from 'src/app/services/game-details.facade';
 
 @Component({
   selector: 'app-game-details',
@@ -13,14 +13,14 @@ import { GameFacade } from 'src/app/services/game.facade';
   styleUrls: ['./game-details.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class GameDetailsComponent implements OnInit, OnDestroy {
-  selectedGame$ = this.gameFacade.selectedGame$;
-  loadingGame$ = this.gameFacade.loadingGame$;
+export class GameDetailsComponent implements OnInit {
+  game$ = this.facade.selectedGame$;
+  loading$ = this.facade.loadingGame$;
 
   constructor(
     private router: Router,
     private route: ActivatedRoute,
-    private gameFacade: GameFacade
+    private facade: GameDetailsFacade
   ) {}
 
   ngOnInit(): void {
@@ -28,16 +28,8 @@ export class GameDetailsComponent implements OnInit, OnDestroy {
       if (!params['id']) {
         this.router.navigate(['']);
       } else {
-        this.gameFacade.findGame(params['id']);
+        this.facade.findGame(params['id']);
       }
     });
-  }
-
-  ngOnDestroy(): void {
-    /**
-     * Open question: can we avoid the consumer (GameDetailsComponent) having
-     * to worry about resetting the state?
-     */
-    // this.gameFacade.clearGame();
   }
 }
