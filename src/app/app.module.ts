@@ -12,7 +12,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatSelectModule } from '@angular/material/select';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { SearchBarComponent } from './components/search-bar/search-bar.component';
-import { HomeComponent } from './components/home/home.component';
+import { GamesComponent } from './components/games/games.component';
 import { HttpErrorsInterceptor } from './interceptors/http-errors.interceptor';
 import { HttpHeadersInterceptor } from './interceptors/http-headers.interceptor';
 import { CapitalizePipe } from './pipes/capitalize.pipe';
@@ -22,7 +22,7 @@ import { GameDetailsComponent } from './components/game-details/game-details.com
   declarations: [
     AppComponent,
     SearchBarComponent,
-    HomeComponent,
+    GamesComponent,
     CapitalizePipe,
     GameDetailsComponent,
   ],

@@ -8,12 +8,12 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { GameSearchFacade } from 'src/app/services/game-search.facade';
 
 @Component({
-  selector: 'app-home',
-  templateUrl: './home.component.html',
-  styleUrls: ['./home.component.scss'],
+  selector: 'app-games',
+  templateUrl: './games.component.html',
+  styleUrls: ['./games.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class HomeComponent implements OnInit {
+export class GamesComponent implements OnInit {
   games$ = this.facade.games$;
   loading$ = this.facade.loading$;
   allowedFilters = this.facade.ALLOWED_FILTERS;
@@ -25,8 +25,8 @@ export class HomeComponent implements OnInit {
   ) {}
 
   ngOnInit() {
-    this.activatedRoute.params.subscribe((param) => {
-      this.facade.setSearch(param['gameName'] ?? '');
+    this.activatedRoute.queryParams.subscribe((params) => {
+      this.facade.setSearch(params['search'] ?? '');
     });
   }
 

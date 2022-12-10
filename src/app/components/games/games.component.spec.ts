@@ -6,15 +6,15 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { RouterTestingModule } from '@angular/router/testing';
 import { CapitalizePipe } from 'src/app/pipes/capitalize.pipe';
 
-import { HomeComponent } from './home.component';
+import { GamesComponent } from './games.component';
 
 describe('HomeComponent', () => {
-  let component: HomeComponent;
-  let fixture: ComponentFixture<HomeComponent>;
+  let component: GamesComponent;
+  let fixture: ComponentFixture<GamesComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [HomeComponent, CapitalizePipe],
+      declarations: [GamesComponent, CapitalizePipe],
       imports: [
         BrowserAnimationsModule,
         RouterTestingModule,
@@ -24,7 +24,7 @@ describe('HomeComponent', () => {
       ],
     }).compileComponents();
 
-    fixture = TestBed.createComponent(HomeComponent);
+    fixture = TestBed.createComponent(GamesComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });
