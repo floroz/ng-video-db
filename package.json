@@ -1,6 +1,10 @@
 {
-  "name": "ng-video-game-db",
+  "name": "videogames-db",
   "version": "0.0.0",
+  "author": {
+    "name": "Daniele Tortora",
+    "email": "contact@danieletortora.com"
+  },
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
