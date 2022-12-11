@@ -1,8 +1,8 @@
 #  Videogames Database (Push-based Architecture) 
 
-This project was inspired by [this app](https://github.com/bobangajicsm/ng-video-games-db).
+This project's UI was inspired by [this app](https://github.com/bobangajicsm/ng-video-games-db).
 
-I have replicated the UI 1:1 but changed its architecture from a pull-based approach to a push-based approach.
+I started from the existing UI (and the RAWG API) as a starting point to then _refactor its architecture from a pull-based to a push-based approach_.
 
 ![image](https://user-images.githubusercontent.com/45793869/205876101-0b70def2-86de-4130-848a-89c139b1c990.png)
 
