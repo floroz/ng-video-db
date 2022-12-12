@@ -46,5 +46,14 @@
         </div>
       </div>
     </div>
+    <div
+      appObserveElement
+      [isContinuous]="true"
+      (isIntersecting)="onInfiniteScroll($event)"
+    >
+      <div class="filters-loading" *ngIf="loading$ | async">
+        <mat-spinner color="primary" diameter="50"></mat-spinner>
+      </div>
+    </div>
   </ng-container>
 </div>

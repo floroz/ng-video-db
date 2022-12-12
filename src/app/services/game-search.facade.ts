@@ -26,4 +26,8 @@ export class GameSearchFacade {
   setOrdering(ordering: string): void {
     this.gameSearchService.setOrdering(ordering);
   }
+
+  loadNext() {
+    this.gameSearchService.loadNext();
+  }
 }

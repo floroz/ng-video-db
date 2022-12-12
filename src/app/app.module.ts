@@ -18,6 +18,7 @@ import { HttpHeadersInterceptor } from './interceptors/http-headers.interceptor'
 import { CapitalizePipe } from './pipes/capitalize.pipe';
 import { GameDetailsComponent } from './components/game-details/game-details.component';
 import { FiltersLabelPipe } from './pipes/filters-label.pipe';
+import { ObserveElementDirective } from './directives/observe-element.directive';
 
 @NgModule({
   declarations: [
@@ -27,6 +28,7 @@ import { FiltersLabelPipe } from './pipes/filters-label.pipe';
     CapitalizePipe,
     GameDetailsComponent,
     FiltersLabelPipe,
+    ObserveElementDirective,
   ],
   imports: [
     AppRoutingModule,

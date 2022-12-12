@@ -6,9 +6,11 @@ import {
   distinctUntilChanged,
   filter,
   map,
+  merge,
+  NEVER,
   Observable,
-  of,
   retry,
+  Subject,
   switchMap,
   tap,
 } from 'rxjs';
@@ -19,6 +21,7 @@ import { StateService } from './state.service';
 
 type GameSearchState = {
   games: Game[];
+  next: string | null;
   filters: GameFilters | undefined;
   ordering: string | undefined;
   search: string;
@@ -44,6 +47,7 @@ const ALLOWED_FILTERS = [
 
 const initialState: GameSearchState = {
   games: [],
+  next: null,
   filters: {},
   ordering: undefined,
   search: '',
@@ -69,15 +73,51 @@ export class GameSearchService extends StateService<GameSearchState> {
     distinctUntilChanged()
   );
 
-  games$: Observable<Game[]> = combineLatest([
+  private manualSearch$ = combineLatest([
     this.search$,
     this.filters$,
     this.ordering$,
   ]).pipe(
     switchMap(([search, filters, ordering]) => {
+      this.setState({ loading: true });
+
       return this.search({ search, filters, ordering });
+    }),
+    retry(2),
+    catchError(this.handleErrors),
+    map(({ results: games, next }) => {
+      this.setState({ loading: false, games, next });
+
+      return games;
     })
   );
+
+  private nextSearch = new Subject();
+
+  private nextSearch$ = this.nextSearch.asObservable().pipe(
+    tap(() => console.log(this.state)),
+    filter(() => !!this.state.next),
+    tap(() => {
+      this.setState({ loading: true });
+    }),
+    switchMap(() => this.http.get<APIResponse<Game>>(this.state.next!)),
+    retry(2),
+    catchError(this.handleErrors),
+    map(({ results: games, next, previous }) => {
+      const fullGamesList = this.state.games.concat(games);
+
+      let nextUrl: string | null = next;
+      if (previous && next === previous) {
+        debugger;
+        nextUrl = null;
+      }
+
+      this.setState({ loading: false, games: fullGamesList, next: nextUrl });
+      return fullGamesList;
+    })
+  );
+
+  games$: Observable<Game[]> = merge(this.manualSearch$, this.nextSearch$);
 
   loading$ = this.store$.pipe().pipe(
     map((state) => state.loading),
@@ -100,6 +140,10 @@ export class GameSearchService extends StateService<GameSearchState> {
     this.setState({ ordering });
   }
 
+  loadNext() {
+    this.nextSearch.next(undefined);
+  }
+
   get ALLOWED_FILTERS() {
     return [...ALLOWED_FILTERS];
   }
@@ -109,27 +153,17 @@ export class GameSearchService extends StateService<GameSearchState> {
     search,
     ordering,
   }: Pick<GameSearchState, 'filters' | 'ordering' | 'search'>) {
-    this.setState({ loading: true });
-
     const params = generateAllGamesParams({ filters, ordering, search });
 
-    return this.http
-      .get<APIResponse<Game>>(`${env.BASE_URL}/games`, {
-        params,
-      })
-      .pipe(
-        map(({ results: games }) => games),
-        retry(2),
-        catchError((err) => {
-          console.error(err);
-          this.setState({ loading: false });
-          return of(null);
-        }),
-        filter(Boolean),
-        tap((games) => {
-          this.setState({ loading: false, games });
-        })
-      );
+    return this.http.get<APIResponse<Game>>(`${env.BASE_URL}/games`, {
+      params,
+    });
+  }
+
+  private handleErrors(err: unknown) {
+    console.error(err);
+    this.setState({ loading: false });
+    return NEVER;
   }
 }
 

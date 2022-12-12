@@ -1,9 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  OnDestroy,
-  OnInit,
-} from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { GameSearchFacade } from 'src/app/services/game-search.facade';
 
@@ -26,7 +21,11 @@ export class GamesComponent implements OnInit {
 
   ngOnInit() {
     this.activatedRoute.queryParams.subscribe((params) => {
+      /**
+       * Retrieving search state from
+       */
       this.facade.setSearch(params['search'] ?? '');
+      this.facade.setOrdering(params['ordering'] ?? '');
     });
   }
 
@@ -35,6 +34,23 @@ export class GamesComponent implements OnInit {
   }
 
   orderBy(ordering: string) {
+    /**
+     * Persisting search state in URL
+     */
+    this.router.navigate(['.'], {
+      queryParams: {
+        ordering: ordering,
+      },
+      queryParamsHandling: 'merge',
+      replaceUrl: true,
+      relativeTo: this.activatedRoute,
+    });
     this.facade.setOrdering(ordering);
+  }
+
+  onInfiniteScroll(isIntersecting: boolean) {
+    if (isIntersecting) {
+      this.facade.loadNext();
+    }
   }
 }
