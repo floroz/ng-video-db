@@ -1,16 +1,27 @@
-.filters {
-  max-width: 1200px;
-  margin: 20px auto;
-  padding-left: 20px;
-}
-
-
 .games {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
   max-width: 1200px;
   margin: 20px auto;
+}
+
+.filters {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  padding: 20px;
+
+  &-loading {
+    margin-left: 36px;
+    display: grid;
+    place-items: center;
+  }
+}
+
+.container {
+  max-width: 1200px;
 }
 
 
@@ -25,15 +36,11 @@
   transition-duration: 0.3s;
   cursor: pointer;
 
+
+
   &:hover {
     box-shadow: 4px 3px 11px 6px rgb(200 152 44 / 46%);
     transform: translateY(-3px);
-  }
-
-  &-loading {
-    width: 100%;
-    display: grid;
-    place-items: center;
   }
 
   &-thumb-container {

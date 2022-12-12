@@ -33,6 +33,13 @@ const ALLOWED_FILTERS = [
   'updated',
   'rating',
   'metacritic',
+  '-name',
+  '-released',
+  '-added',
+  '-created',
+  '-updated',
+  '-rating',
+  '-metacritic',
 ] as const;
 
 const initialState: GameSearchState = {

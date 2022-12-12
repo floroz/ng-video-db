@@ -17,6 +17,7 @@ import { HttpErrorsInterceptor } from './interceptors/http-errors.interceptor';
 import { HttpHeadersInterceptor } from './interceptors/http-headers.interceptor';
 import { CapitalizePipe } from './pipes/capitalize.pipe';
 import { GameDetailsComponent } from './components/game-details/game-details.component';
+import { FiltersLabelPipe } from './pipes/filters-label.pipe';
 
 @NgModule({
   declarations: [
@@ -25,6 +26,7 @@ import { GameDetailsComponent } from './components/game-details/game-details.com
     GamesComponent,
     CapitalizePipe,
     GameDetailsComponent,
+    FiltersLabelPipe,
   ],
   imports: [
     AppRoutingModule,

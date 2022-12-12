@@ -8,8 +8,14 @@ export class CapitalizePipe implements PipeTransform {
   transform(value: string): string {
     if (!value.trim()) return value;
 
-    if (value.length === 1) return value.toUpperCase();
+    return value
+      .trim()
+      .split(' ')
+      .map((word) => {
+        if (word.length === 1) return word.toUpperCase();
 
-    return value.at(0)?.toUpperCase() + value.slice(1);
+        return word.at(0)?.toUpperCase() + word.slice(1);
+      })
+      .join(' ');
   }
 }
