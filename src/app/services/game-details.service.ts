@@ -25,11 +25,11 @@ import { StateService } from './state.service';
 const INITIAL_WAITING_TIME = 150;
 const MINIMUM_TIME_TO_DISPLAY_LOADER = 250;
 
-interface GameDetailsState {
-  selectedGame: null | Game;
-  loading: boolean;
-  selectedGameId: string | null;
-}
+type GameDetailsState = {
+  readonly selectedGame: null | Game;
+  readonly loading: boolean;
+  readonly selectedGameId: string | null;
+};
 
 const initialState: GameDetailsState = {
   loading: false,

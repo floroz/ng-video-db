@@ -6,12 +6,12 @@ import { GameSearchService } from './game-search.service';
   providedIn: 'root',
 })
 export class GameSearchFacade {
-  games$ = this.gameSearchService.games$;
-  filters$ = this.gameSearchService.filters$;
-  search$ = this.gameSearchService.search$;
-  loading$ = this.gameSearchService.loading$;
+  readonly games$ = this.gameSearchService.games$;
+  readonly filters$ = this.gameSearchService.filters$;
+  readonly search$ = this.gameSearchService.search$;
+  readonly loading$ = this.gameSearchService.loading$;
 
-  ALLOWED_FILTERS = this.gameSearchService.ALLOWED_FILTERS;
+  readonly ALLOWED_FILTERS = this.gameSearchService.ALLOWED_FILTERS;
 
   constructor(private gameSearchService: GameSearchService) {}
 

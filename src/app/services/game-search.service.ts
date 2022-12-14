@@ -20,12 +20,12 @@ import { APIResponse, Game, GameFilters } from '../models/game';
 import { StateService } from './state.service';
 
 type GameSearchState = {
-  games: Game[];
-  next: string | null;
-  filters: GameFilters | undefined;
-  ordering: string | undefined;
-  search: string;
-  loading: boolean;
+  readonly games: Game[];
+  readonly next: string | null;
+  readonly filters: GameFilters | undefined;
+  readonly ordering: string | undefined;
+  readonly search: string;
+  readonly loading: boolean;
 };
 
 const ALLOWED_FILTERS = [
