@@ -25,6 +25,10 @@ import { StateService } from './state.service';
 const INITIAL_WAITING_TIME = 150;
 const MINIMUM_TIME_TO_DISPLAY_LOADER = 250;
 
+type GameDetailsCache = {
+  [gameId: string]: Game;
+};
+
 type GameDetailsState = {
   readonly selectedGame: null | Game;
   readonly loading: boolean;
@@ -44,6 +48,7 @@ export class GameDetailsService extends StateService<GameDetailsState> {
   constructor(private http: HttpClient) {
     super(initialState);
   }
+  private cache: GameDetailsCache = {};
 
   private store$ = this.store.asObservable();
 
@@ -52,7 +57,11 @@ export class GameDetailsService extends StateService<GameDetailsState> {
     distinctUntilChanged(),
     switchMap((id): Observable<null | Game> => {
       if (id == null) {
+        // something went wrong
         return of(null);
+      } else if (this.cache[id]) {
+        // game details were already requested previous
+        return of(this.cache[id]);
       } else {
         return this.findGameDetails(id);
       }
@@ -99,6 +108,7 @@ export class GameDetailsService extends StateService<GameDetailsState> {
 
         return gameDetails;
       }),
+      tap((game) => this.updateCache(game)),
       shareReplay(1)
     );
 
@@ -155,5 +165,9 @@ export class GameDetailsService extends StateService<GameDetailsState> {
         `${env.BASE_URL}/games/${id}/screenshots`
       )
       .pipe(map(({ results: screenshots }) => screenshots));
+  }
+
+  private updateCache(game: Game) {
+    this.cache[game.id] = game;
   }
 }
