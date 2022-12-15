@@ -43,11 +43,11 @@ interface Rating {
   title: string;
 }
 
-interface Screenshots {
+export interface Screenshots {
   image: string;
 }
 
-interface Trailer {
+export interface Trailer {
   data: {
     max: string;
   };

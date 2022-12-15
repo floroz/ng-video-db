@@ -1,10 +1,7 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  OnDestroy,
-  OnInit,
-} from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
+import { Title } from '@angular/platform-browser';
 import { ActivatedRoute, Router } from '@angular/router';
+import { tap } from 'rxjs';
 import { GameDetailsFacade } from 'src/app/services/game-details.facade';
 
 @Component({
@@ -14,13 +11,16 @@ import { GameDetailsFacade } from 'src/app/services/game-details.facade';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class GameDetailsComponent implements OnInit {
-  game$ = this.facade.selectedGame$;
+  game$ = this.facade.selectedGame$.pipe(
+    tap((game) => game && this.title.setTitle(`${game.name} | Videogames DB`))
+  );
   loading$ = this.facade.loadingGame$;
 
   constructor(
     private router: Router,
     private route: ActivatedRoute,
-    private facade: GameDetailsFacade
+    private facade: GameDetailsFacade,
+    private title: Title
   ) {}
 
   ngOnInit(): void {

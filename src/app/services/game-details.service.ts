@@ -19,15 +19,14 @@ import {
   timer,
 } from 'rxjs';
 import { env } from 'src/environments/environment';
-import { APIResponse, Game } from '../models/game';
+import { APIResponse, Game, Screenshots, Trailer } from '../models/game';
 import { StateService } from './state.service';
 
 const INITIAL_WAITING_TIME = 150;
 const MINIMUM_TIME_TO_DISPLAY_LOADER = 250;
 
-type GameDetailsCache = {
-  [gameId: string]: Game;
-};
+type GameIDString = string;
+type GameDetailsCache = Map<GameIDString, Game>;
 
 type GameDetailsState = {
   readonly selectedGame: null | Game;
@@ -48,7 +47,7 @@ export class GameDetailsService extends StateService<GameDetailsState> {
   constructor(private http: HttpClient) {
     super(initialState);
   }
-  private cache: GameDetailsCache = {};
+  private cache: GameDetailsCache = new Map();
 
   private store$ = this.store.asObservable();
 
@@ -59,12 +58,17 @@ export class GameDetailsService extends StateService<GameDetailsState> {
       if (id == null) {
         // something went wrong
         return of(null);
-      } else if (this.cache[id]) {
-        // game details were already requested previous
-        return of(this.cache[id]);
-      } else {
-        return this.findGameDetails(id);
       }
+
+      if (this.cache.has(id)) {
+        // https://github.com/microsoft/TypeScript/issues/9619
+        // apparently compiler cannot infer that map.has acts as a type guard so that map.get in the next
+        // line can never be undefined.
+        // @ts-expect-error
+        return of(this.cache.get(id));
+      }
+
+      return this.findGameDetails(id);
     })
   );
 
@@ -81,34 +85,39 @@ export class GameDetailsService extends StateService<GameDetailsState> {
     this.setState({ selectedGameId: null });
   }
 
+  private handleError(err: unknown): Observable<null> {
+    console.error(err);
+    return of(null);
+  }
+
   private findGameDetails(id: string): Observable<Game> {
     const gameDetails$ = this.findGameById(id).pipe(
-      catchError((err) => {
-        console.error(err);
-        return of(null);
-      }),
+      catchError(this.handleError),
       retry(2)
     );
     const screenshots$ = this.findScreenshotsById(id).pipe(
-      catchError((err) => {
-        console.error(err);
-        return of(null);
-      }),
+      catchError(this.handleError),
       retry(2)
     );
 
-    const data$ = forkJoin([gameDetails$, screenshots$]).pipe(
+    const trailers$ = this.findTrailersById(id).pipe(
+      catchError(this.handleError),
+      retry(2)
+    );
+
+    const data$ = forkJoin([gameDetails$, screenshots$, trailers$]).pipe(
       filter(
-        (data): data is [Game, { image: string }[]] =>
+        (data): data is [Game, Screenshots[], Trailer[]] =>
           data[0] != null && data[1] != null
       ),
-      map(([gameDetails, screenshots]) => {
-        // enhance game object with screenshots
+      map(([gameDetails, screenshots, trailers]) => {
+        // enhance game object with screenshots and trailers
         gameDetails.screenshots = screenshots;
+        gameDetails.trailers = trailers;
 
         return gameDetails;
       }),
-      tap((game) => this.updateCache(game)),
+      tap((game) => this.addGameToCache(game)),
       shareReplay(1)
     );
 
@@ -159,15 +168,19 @@ export class GameDetailsService extends StateService<GameDetailsState> {
     return this.http.get<Game>(`${env.BASE_URL}/games/${id}`);
   }
 
-  private findScreenshotsById(id: string): Observable<{ image: string }[]> {
+  private findScreenshotsById(id: string): Observable<Screenshots[]> {
     return this.http
-      .get<APIResponse<{ image: string }>>(
-        `${env.BASE_URL}/games/${id}/screenshots`
-      )
+      .get<APIResponse<Screenshots>>(`${env.BASE_URL}/games/${id}/screenshots`)
       .pipe(map(({ results: screenshots }) => screenshots));
   }
 
-  private updateCache(game: Game) {
-    this.cache[game.id] = game;
+  private findTrailersById(id: string): Observable<Trailer[]> {
+    return this.http
+      .get<APIResponse<Trailer>>(`${env.BASE_URL}/games/${id}/movies`)
+      .pipe(map(({ results }) => results));
+  }
+
+  private addGameToCache(game: Game) {
+    this.cache.set(game.id.toString(), game);
   }
 }
