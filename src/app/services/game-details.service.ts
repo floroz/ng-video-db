@@ -49,8 +49,6 @@ export class GameDetailsService extends StateService<GameDetailsState> {
   }
   private cache: GameDetailsCache = new Map();
 
-  private store$ = this.store.asObservable();
-
   selectedGame$ = this.store$.pipe(
     map((state) => state.selectedGameId),
     distinctUntilChanged(),

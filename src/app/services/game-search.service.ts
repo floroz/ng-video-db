@@ -58,8 +58,6 @@ const initialState: GameSearchState = {
   providedIn: 'root',
 })
 export class GameSearchService extends StateService<GameSearchState> {
-  private store$ = this.store.asObservable();
-
   filters$ = this.store$.pipe(
     map((state) => state.filters),
     distinctUntilChanged()
