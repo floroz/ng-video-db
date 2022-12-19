@@ -31,13 +31,11 @@ type GameDetailsCache = Map<GameIDString, Game>;
 type GameDetailsState = {
   readonly selectedGame: null | Game;
   readonly loading: boolean;
-  readonly selectedGameId: string | null;
 };
 
 const initialState: GameDetailsState = {
   loading: false,
   selectedGame: null,
-  selectedGameId: null,
 };
 
 @Injectable({
@@ -49,47 +47,23 @@ export class GameDetailsService extends StateService<GameDetailsState> {
   }
   private cache: GameDetailsCache = new Map();
 
-  selectedGame$ = this.store$.pipe(
-    map((state) => state.selectedGameId),
-    distinctUntilChanged(),
-    switchMap((id): Observable<null | Game> => {
-      if (id == null) {
-        // something went wrong
-        return of(null);
-      }
-
-      if (this.cache.has(id)) {
-        // https://github.com/microsoft/TypeScript/issues/9619
-        // apparently compiler cannot infer that map.has acts as a type guard so that map.get in the next
-        // line can never be undefined.
-        // @ts-expect-error
-        return of(this.cache.get(id));
-      }
-
-      return this.findGameDetails(id);
-    })
-  );
-
   loading$ = this.store$.pipe(
     map((state) => state.loading),
     distinctUntilChanged()
   );
 
-  findOne(id: string) {
-    this.setState({ selectedGameId: id });
-  }
-
   clear() {
-    this.setState({ selectedGameId: null });
+    this.setState({ selectedGame: null });
   }
 
-  private handleError(err: unknown): Observable<null> {
-    console.error(err);
-    return of(null);
+  private dataValidator(
+    data: unknown
+  ): data is [Game, Screenshots[], Trailer[]] {
+    return Array.isArray(data) && data[0] != null && data[1] != null;
   }
 
-  private findGameDetails(id: string): Observable<Game> {
-    const gameDetails$ = this.findGameById(id).pipe(
+  findGameById$(id: string): Observable<Game> {
+    const gameDetails$ = this.findGameDetailsById(id).pipe(
       catchError(this.handleError),
       retry(2)
     );
@@ -104,17 +78,12 @@ export class GameDetailsService extends StateService<GameDetailsState> {
     );
 
     const data$ = forkJoin([gameDetails$, screenshots$, trailers$]).pipe(
-      filter(
-        (data): data is [Game, Screenshots[], Trailer[]] =>
-          data[0] != null && data[1] != null
-      ),
-      map(([gameDetails, screenshots, trailers]) => {
-        // enhance game object with screenshots and trailers
-        gameDetails.screenshots = screenshots;
-        gameDetails.trailers = trailers;
-
-        return gameDetails;
-      }),
+      filter(this.dataValidator),
+      map(([gameDetails, screenshots, trailers]) => ({
+        ...gameDetails,
+        screenshots: screenshots,
+        trailers: trailers,
+      })),
       tap((game) => this.addGameToCache(game)),
       shareReplay(1)
     );
@@ -162,7 +131,20 @@ export class GameDetailsService extends StateService<GameDetailsState> {
     return concat(race$, hideLoading$, data$).pipe(filter(Boolean));
   }
 
-  private findGameById(id: string): Observable<Game> {
+  private findGameDetailsById(id: string): Observable<Game | null> {
+    if (id == null) {
+      // something went wrong
+      return of(null);
+    }
+
+    if (this.cache.has(id)) {
+      // https://github.com/microsoft/TypeScript/issues/9619
+      // apparently compiler cannot infer that map.has acts as a type guard so that map.get in the next
+      // line can never be undefined.
+      // @ts-expect-error
+      return of(this.cache.get(id));
+    }
+
     return this.http.get<Game>(`${env.BASE_URL}/games/${id}`);
   }
 
@@ -180,5 +162,10 @@ export class GameDetailsService extends StateService<GameDetailsState> {
 
   private addGameToCache(game: Game) {
     this.cache.set(game.id.toString(), game);
+  }
+
+  private handleError(err: unknown): Observable<null> {
+    console.error(err);
+    return of(null);
   }
 }
