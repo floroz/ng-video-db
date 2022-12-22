@@ -1,13 +1,21 @@
 import produce, { Immutable } from 'immer';
-import { BehaviorSubject } from 'rxjs';
+import { BehaviorSubject, Observable } from 'rxjs';
 
 export class StateService<TState extends Immutable<Record<string, unknown>>> {
-  protected state: TState;
-  protected store: BehaviorSubject<TState>;
+  private store: BehaviorSubject<TState>;
+
+  protected store$: Observable<TState>;
+
+  protected get state(): TState {
+    return this.store.getValue();
+  }
 
   constructor(private initialState: TState) {
-    this.state = produce(this.initialState, (draft) => draft);
-    this.store = new BehaviorSubject(this.state);
+    this.store = new BehaviorSubject(
+      produce(this.initialState, (draft) => draft)
+    );
+
+    this.store$ = this.store.asObservable();
   }
 
   protected setState(partial: Partial<TState>) {
@@ -19,7 +27,6 @@ export class StateService<TState extends Immutable<Record<string, unknown>>> {
         draft[key] = value;
       }
     });
-    this.state = newState;
     this.store.next(newState);
   }
 }

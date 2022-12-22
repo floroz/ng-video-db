@@ -8,10 +8,14 @@ import {
   merge,
   Observable,
   of,
-  startWith,
+  switchMap,
   tap,
 } from 'rxjs';
+import { Game } from 'src/app/models/game';
 import { GameDetailsFacade } from 'src/app/services/game-details.facade';
+
+const MIN_RATING = 0.1;
+const TIME_TO_DISPLAY_RATING = 250;
 
 @Component({
   selector: 'app-game-details',
@@ -19,18 +23,27 @@ import { GameDetailsFacade } from 'src/app/services/game-details.facade';
   styleUrls: ['./game-details.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class GameDetailsComponent implements OnInit {
-  game$ = this.facade.selectedGame$.pipe(
-    tap((game) => game && this.title.setTitle(`${game.name} | Videogames DB`))
-  );
+export class GameDetailsComponent {
   loading$ = this.facade.loadingGame$;
 
+  game$ = this.route.params.pipe(
+    switchMap((params) => {
+      const { id } = params;
+
+      if (!id) {
+        return this.redirectToHome$();
+      } else {
+        return this.getGameById$(id);
+      }
+    })
+  );
+
   rating$: Observable<number> = merge(
-    of(0.1),
+    of(MIN_RATING),
     this.game$.pipe(
       filter(Boolean),
       map((game) => game.metacritic),
-      delay(250)
+      delay(TIME_TO_DISPLAY_RATING)
     )
   );
 
@@ -41,14 +54,18 @@ export class GameDetailsComponent implements OnInit {
     private title: Title
   ) {}
 
-  ngOnInit(): void {
-    this.route.params.subscribe((params) => {
-      if (!params['id']) {
-        this.router.navigate(['']);
-      } else {
-        this.facade.findGame(params['id']);
-      }
-    });
+  getGameById$(id: string): Observable<Game> {
+    return this.facade
+      .findGameById$(id)
+      .pipe(tap((game) => game && this.setPageTitle(game.name)));
+  }
+
+  setPageTitle(gameName: Game['name']) {
+    this.title.setTitle(`${gameName} | Videogames DB`);
+  }
+
+  redirectToHome$() {
+    return of(null).pipe(tap(() => this.router.navigate([''])));
   }
 
   calcRatingColor(value: number): string {

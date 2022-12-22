@@ -1,16 +1,17 @@
 import { Injectable } from '@angular/core';
+import { Observable } from 'rxjs';
+import { Game } from '../models/game';
 import { GameDetailsService } from './game-details.service';
 
 @Injectable({
   providedIn: 'root',
 })
 export class GameDetailsFacade {
-  selectedGame$ = this.gameDetailsService.selectedGame$;
   loadingGame$ = this.gameDetailsService.loading$;
 
   constructor(private gameDetailsService: GameDetailsService) {}
 
-  findGame(id: string): void {
-    this.gameDetailsService.findOne(id);
+  findGameById$(id: string): Observable<Game> {
+    return this.gameDetailsService.findGameById$(id);
   }
 }
